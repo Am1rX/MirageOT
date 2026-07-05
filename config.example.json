@@ -1,0 +1,34 @@
+{
+  "_comment": "MirageOT config. Copy to config.json. CLI flags override these. Ports below are REAL service ports (add --demo to shift them +5000 for laptop testing).",
+
+  "profile": "siemens_s7_1200",
+  "_profile_options": "siemens_s7_1200 | schneider_m340 | allen_bradley | ge_rx3i",
+
+  "host": "0.0.0.0",
+  "console_port": 8888,
+
+  "decoys": ["modbus", "s7comm", "dnp3", "iec104", "ethernetip", "web-hmi", "ftp", "telnet", "snmp", "bacnet"],
+  "_decoys_note": "Pick the protocols that match the plant you are impersonating. Fewer = more believable.",
+
+  "critical_points": {"coil": [4], "holding": [3, 4]},
+  "_critical_points_note": "Modbus addresses that, if written, are tagged as loss-of-safety (T0880) - your SIS/limit points.",
+
+  "block_threshold": 10,
+  "_block_threshold_note": "Cumulative threat score at which a source is escalated (blocked or flagged for review, per response_mode).",
+
+  "response_mode": "alert-only",
+  "_response_mode_note": "OT-SAFE DEFAULT. 'alert-only' = never auto-drop traffic; raise the alert and let a human decide (recommended for OT, where a wrong block can hurt availability/safety). 'blocklist' = auto-write untrusted sources to the blocklist for firewall ingestion.",
+
+  "never_block": ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.10"],
+  "_never_block_note": "IPs/CIDRs that must NEVER be blocked even in blocklist mode: OT asset subnets (HMI/PLC/SCADA), engineering stations, and your own asset/vuln scanners. A hit from these still ALERTS (someone/something legit touched a decoy = investigate), but traffic is never dropped.",
+
+  "log": "/var/log/mirageot/events.jsonl",
+  "blocklist": "/var/log/mirageot/blocklist.txt",
+  "intel": "/var/log/mirageot/threat_intel.json",
+
+  "syslog": "10.0.3.10:514",
+  "_syslog_note": "Optional. CEF over UDP to a SIEM (FortiSIEM/Splunk/QRadar/Wazuh). Remove to disable.",
+
+  "webhook": "https://hooks.slack.com/services/XXX/YYY/ZZZ",
+  "_webhook_note": "Optional. HIGH/CRITICAL alerts are POSTed as JSON {text:...} (Slack/Teams/SOAR compatible). Remove to disable."
+}

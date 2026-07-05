@@ -1,0 +1,32 @@
+# systemd unit for the MirageOT ICS/OT deception platform.
+# Install:
+#   sudo useradd -r -s /usr/sbin/nologin mirageot
+#   sudo mkdir -p /opt/mirageot /var/log/mirageot && sudo chown mirageot /var/log/mirageot
+#   sudo cp mirageot.py gen_tokens.py config.json /opt/mirageot/
+#   sudo cp mirageot.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now mirageot
+#
+# Binding low ports (502, 102, 21, 23) as a non-root user needs the capability below.
+[Unit]
+Description=MirageOT ICS/OT deception platform
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mirageot
+Group=mirageot
+WorkingDirectory=/opt/mirageot
+ExecStart=/usr/bin/python3 /opt/mirageot/mirageot.py --config /opt/mirageot/config.json
+Restart=always
+RestartSec=5
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/log/mirageot
+PrivateTmp=true
+# Defense in depth: the honeypot must not initiate outbound connections except syslog/webhook.
+# Enforce this at the network/firewall layer too (egress drop-all + allow collector only).
+
+[Install]
+WantedBy=multi-user.target
