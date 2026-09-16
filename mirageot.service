@@ -2,7 +2,8 @@
 # Install:
 #   sudo useradd -r -s /usr/sbin/nologin mirageot
 #   sudo mkdir -p /opt/mirageot /var/log/mirageot && sudo chown mirageot /var/log/mirageot
-#   sudo cp mirageot.py gen_tokens.py config.json /opt/mirageot/
+#   sudo cp mirageot.py config.json /opt/mirageot/
+#   sudo cp -r mirageot /opt/mirageot/
 #   sudo cp mirageot.service /etc/systemd/system/
 #   sudo systemctl daemon-reload && sudo systemctl enable --now mirageot
 #

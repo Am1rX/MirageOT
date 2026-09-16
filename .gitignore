@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+config.json
+lures/
+*.jsonl
+threat_intel.json
+blocklist.txt
+*.log
