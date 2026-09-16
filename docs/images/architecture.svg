@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">MirageOT architecture</title>
+  <desc id="desc">Observed network traffic reaches decoy protocol listeners, is correlated by the event bus into sessions and scores, and is exported to JSONL, a web console, threat intelligence, and optional external alert destinations.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101923"/><stop offset="1" stop-color="#0b1119"/></linearGradient>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5 0 9Z" fill="#58c7bb"/></marker>
+    <style>
+      .title{font:700 25px Arial,sans-serif;fill:#eef5f9}.sub{font:15px Arial,sans-serif;fill:#aabcc9}.head{font:700 18px Arial,sans-serif;fill:#eaf4f8}.body{font:14px Arial,sans-serif;fill:#b6c7d2}.small{font:12px Arial,sans-serif;fill:#8fa5b4}.line{stroke:#58c7bb;stroke-width:2.5;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="520" rx="24" fill="url(#bg)"/>
+  <text x="40" y="48" class="title">MirageOT · data flow</text>
+  <text x="40" y="74" class="sub">Decoy traffic becomes SOC context without touching real controllers.</text>
+
+  <rect x="42" y="145" width="205" height="225" rx="16" fill="#182632" stroke="#355466"/>
+  <text x="62" y="184" class="head">Observed source</text>
+  <text x="62" y="215" class="body">Scanner or client</text>
+  <text x="62" y="241" class="body">on a monitored segment</text>
+  <text x="62" y="320" class="small">No trusted plant connection</text>
+
+  <rect x="294" y="120" width="260" height="275" rx="16" fill="#192837" stroke="#3e6f77"/>
+  <text x="314" y="159" class="head">Protocol decoys</text>
+  <text x="314" y="190" class="body">Modbus/TCP · S7comm</text>
+  <text x="314" y="216" class="body">DNP3 · IEC-104 · EtherNet/IP</text>
+  <text x="314" y="242" class="body">BACnet · SNMP</text>
+  <text x="314" y="268" class="body">FTP · Telnet · Web HMI</text>
+  <rect x="314" y="315" width="219" height="48" rx="9" fill="#16353c"/>
+  <text x="328" y="335" class="small">Selected profile supplies a</text>
+  <text x="328" y="351" class="small">decoy identity, not a real PLC.</text>
+
+  <rect x="607" y="145" width="250" height="225" rx="16" fill="#1d2d3c" stroke="#4b8492"/>
+  <text x="627" y="184" class="head">Event bus</text>
+  <text x="627" y="216" class="body">Structured events</text>
+  <text x="627" y="242" class="body">Per-source sessions</text>
+  <text x="627" y="268" class="body">Score and stage</text>
+  <text x="627" y="295" class="body">ATT&amp;CK for ICS labels*</text>
+  <text x="627" y="340" class="small">* Analytic hypotheses</text>
+
+  <rect x="911" y="105" width="245" height="78" rx="14" fill="#203140" stroke="#416977"/>
+  <text x="930" y="135" class="head">Local evidence</text>
+  <text x="930" y="160" class="body">JSONL · IOC export</text>
+  <rect x="911" y="207" width="245" height="78" rx="14" fill="#203140" stroke="#416977"/>
+  <text x="930" y="237" class="head">SOC view</text>
+  <text x="930" y="262" class="body">Dashboard · API</text>
+  <rect x="911" y="309" width="245" height="90" rx="14" fill="#203140" stroke="#416977"/>
+  <text x="930" y="339" class="head">Optional integrations</text>
+  <text x="930" y="364" class="body">CEF/syslog · webhook</text>
+  <text x="930" y="385" class="small">Blocklist file by policy</text>
+
+  <path d="M247 257H293" class="line"/><path d="M554 257H606" class="line"/>
+  <path d="M857 210H885V144H910" class="line"/>
+  <path d="M857 257H910" class="line"/>
+  <path d="M857 305H885V354H910" class="line"/>
+  <text x="40" y="470" class="small">Deployment boundary: run on an isolated, monitored segment. The decoy does not operate production devices.</text>
+</svg>
