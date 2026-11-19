@@ -67,6 +67,12 @@ python gen_tokens.py --decoy-ip 127.0.0.1 --web-port 13080 --modbus-port 5502 --
 
 The generated files are example lures. Visiting the `/token/` URL records a `token-trip` event when the Web HMI decoy is running. Review their content and placement before deployment. MirageOT does not provide an RDP decoy.
 
+## Review saved events offline
+
+Open [`replay/index.html`](replay/index.html) in a modern browser from a local clone, or download the file from GitHub and open it directly. MirageOT Replay starts with a synthetic case. To inspect your own events, choose **باز کردن فایل JSONL** and open the MirageOT `events.jsonl` file. The viewer accepts files up to 20 MiB and reports skipped invalid lines.
+
+Use **میز تحلیل** to filter by source and inspect the UTC timeline and the original log line. **گزارش رخداد** summarizes the active source filter, shows up to 12 entries prioritized by recorded severity, and downloads a standalone HTML report. The export includes source addresses and selected event metadata. Raw log lines and the free-form `detail` field stay in the local viewer. The page works offline with no server, external assets, or upload.
+
 ## Protocol coverage
 
 MirageOT is a **decoy sensor**, not a vendor-certified PLC emulator. Profiles advertise device identity; protocol depth varies.

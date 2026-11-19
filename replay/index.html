@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="dark">
+  <title>MirageOT Replay | بررسی رخداد</title>
+  <style>
+    :root {
+      --bg: #0b131b;
+      --panel: #111e29;
+      --raised: #162533;
+      --line: #29404d;
+      --text: #eef5f5;
+      --muted: #a8bdc7;
+      --mint: #7ce4c9;
+      --mint-bg: #173b3d;
+      --amber: #ffd098;
+      --amber-bg: #412e22;
+      font-family: Tahoma, 'Segoe UI', sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; font-size: .875rem; line-height: 1.65; }
+    h1, h2, h3, p { margin: 0; }
+    button, select, input { font: inherit; }
+    button, select, .open-file { min-height: 43px; color: inherit; }
+    button, select, .open-file, summary { cursor: pointer; }
+    button:disabled { cursor: default; opacity: .55; }
+    :focus-visible, .open-file:focus-within { outline: 2px solid var(--mint); outline-offset: 3px; }
+    code, time, .mono { font-family: Consolas, 'SFMono-Regular', monospace; }
+    bdi { unicode-bidi: isolate; overflow-wrap: anywhere; }
+    .shell { width: min(100% - 2.75rem, 1120px); margin-inline: auto; }
+    .masthead { background: #101b25; border-block-end: 1px solid var(--line); }
+    .masthead .shell { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 66px; }
+    .brand { display: flex; align-items: center; gap: 11px; font: 650 17px/1.35 'Segoe UI', sans-serif; direction: ltr; white-space: nowrap; }
+    .brand-mark { position: relative; width: 34px; height: 34px; display: grid; place-items: center; background: var(--mint-bg); border: 1px solid #2a5654; border-radius: 9px; }
+    .brand-mark::before, .brand-mark::after { position: absolute; content: ''; border-radius: 50%; }
+    .brand-mark::before { width: 17px; height: 17px; border: 1px solid var(--mint); }
+    .brand-mark::after { width: 5px; height: 5px; background: var(--mint); }
+    .offline { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: .78rem; }
+    .offline::before { content: ''; width: 7px; height: 7px; background: var(--mint); border-radius: 50%; }
+    main { padding-block: 34px 42px; }
+    .intro { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 17px; }
+    .intro h1 { font-size: clamp(1.65rem, 4vw, 2.55rem); line-height: 1.4; }
+    .intro p { margin-block-start: 5px; color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .control, select { background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; }
+    .control:hover:not(:disabled), select:hover { border-color: var(--muted); }
+    .open-file { position: relative; display: inline-flex; align-items: center; padding: 7px 13px; border-radius: 8px; background: var(--mint); color: #0a2a26; font-weight: bold; }
+    .open-file:hover { background: #adf5e4; }
+    .open-file input { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+    .workspace { margin-block-start: 25px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+    .filebar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 17px; }
+    .filename { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+    #file-name { max-width: min(320px, 65vw); overflow-wrap: anywhere; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--mint-bg); color: var(--mint); font-size: .76rem; }
+    .tag.attention { background: var(--amber-bg); color: var(--amber); }
+    .source-control { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--muted); }
+    .source-control select { min-height: 39px; max-width: min(230px, 65vw); color: var(--text); }
+    .notification { margin: 0 17px 12px; padding: 8px 11px; background: var(--amber-bg); border-radius: 7px; color: var(--amber); overflow-wrap: anywhere; }
+    .viewbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; padding-inline: 17px; border-block: 1px solid var(--line); }
+    .views { display: flex; gap: 8px; }
+    .views button { padding: 8px 9px; background: none; border: 0; color: var(--muted); border-block-end: 2px solid transparent; }
+    .views button[aria-pressed="true"] { border-color: var(--mint); color: var(--mint); font-weight: bold; }
+    .meta { font-size: .78rem; color: var(--muted); }
+    .analysis { display: grid; grid-template-columns: minmax(300px, .95fr) minmax(0, 1.05fr); }
+    .timeline, .evidence { min-width: 0; padding: 17px; }
+    .timeline { border-inline-end: 1px solid var(--line); }
+    .section-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-block-end: 13px; }
+    .section-head h2 { font-size: 1rem; }
+    .events { display: grid; gap: 5px; }
+    .event { width: 100%; display: grid; grid-template-columns: 15px minmax(0, 1fr) auto; align-items: center; gap: 10px; text-align: start; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; background: none; }
+    .event:hover { background: var(--raised); }
+    .event[aria-pressed="true"] { background: var(--raised); border-color: var(--line); box-shadow: inset -3px 0 var(--mint); }
+    .event-dot { width: 8px; height: 8px; border: 1px solid var(--mint); border-radius: 50%; }
+    .event.attention .event-dot { border-color: var(--amber); background: var(--amber); }
+    .event-copy, .event-clock { display: grid; gap: 2px; }
+    .event-clock { justify-items: end; }
+    .event time { color: var(--muted); font-size: .78rem; direction: ltr; white-space: nowrap; }
+    .paging { padding-block-start: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+    .paging .control { min-height: 38px; padding-block: 4px; }
+    .facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-block: 12px; }
+    .facts div { min-width: 0; }
+    .facts dt { color: var(--muted); font-size: .75rem; }
+    .facts dd { margin: 2px 0 0; }
+    .evidence h3 { font-size: 1.15rem; overflow-wrap: anywhere; }
+    .evidence .reason { color: var(--muted); margin-block-start: 5px; }
+    .raw { margin-block: 13px; border-radius: 8px; background: #0c1720; border: 1px solid var(--line); }
+    .raw summary { padding: 9px 12px; }
+    .raw pre { padding: 0 12px 11px; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--mint); font-size: .82rem; }
+    .step { padding: 10px 12px; border-inline-start: 3px solid var(--mint); border-radius: 6px; background: var(--raised); overflow-wrap: anywhere; }
+    .step h3 { font-size: .88rem; margin-block-end: 3px; }
+    .report { width: min(100%, 830px); margin-inline: auto; padding: 23px 22px; }
+    .report-head { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; }
+    .report-head h2 { font-size: 1.35rem; }
+    .report p { margin-block-start: 8px; }
+    .report .step { margin-block: 14px; }
+    .report .step p { margin: 0; }
+    .report details { margin-block: 11px; border-block-start: 1px solid var(--line); }
+    .report details summary { min-height: 43px; padding-block: 9px; }
+    .report-lines { margin: 0; padding: 0 22px 0 0; }
+    .report-lines li { padding: 4px 0; overflow-wrap: anywhere; }
+    .report-lines .meta { margin-inline-start: 5px; }
+    #export-report { margin-block-start: 8px; }
+    @media (max-width: 680px) {
+      .shell { width: calc(100% - 1.5rem); }
+      main { padding-block: 23px; }
+      .analysis { grid-template-columns: minmax(0, 1fr); }
+      .timeline { border-inline-end: 0; border-block-end: 1px solid var(--line); }
+      .filebar, .timeline, .evidence, .report { padding: 13px; }
+      .viewbar { padding-inline: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="shell">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span>MirageOT Replay</div>
+      <span class="offline">آفلاین</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="intro">
+      <div><h1>بررسی رخداد صنعتی</h1><p>خط زمانی، شواهد و گزارش رخدادهای ثبت‌شده در MirageOT</p></div>
+      <div class="actions">
+        <label class="open-file">باز کردن فایل JSONL<input id="open-file" type="file" accept=".jsonl,.ndjson,.log,.txt,application/x-ndjson" aria-label="باز کردن فایل JSONL"></label>
+        <button class="control" type="button" id="open-demo">باز کردن نمونه</button>
+      </div>
+    </div>
+
+    <section class="workspace" aria-label="پروندهٔ رخداد">
+      <div class="filebar">
+        <div class="filename"><bdi class="mono" id="file-name"></bdi><span class="tag" id="demo-label">دادهٔ آزمایشی</span></div>
+        <label class="source-control" for="source">مبدأ <select id="source"></select></label>
+      </div>
+      <p id="notice" class="notification" role="status" hidden></p>
+      <div class="viewbar">
+        <div class="views" aria-label="نمای پرونده">
+          <button type="button" aria-pressed="true" aria-controls="report-view" data-view="report-view">گزارش رخداد</button>
+          <button type="button" aria-pressed="false" aria-controls="analysis-view" data-view="analysis-view">میز تحلیل</button>
+        </div>
+        <p class="meta" id="event-count" role="status"></p>
+      </div>
+
+      <section id="report-view" class="report" aria-label="گزارش رخداد">
+        <div id="report-content">
+          <div class="report-head"><h2 id="case-title"></h2><span class="tag" id="case-status"></span></div>
+          <p id="case-summary"></p>
+          <p class="meta" id="case-range"></p>
+          <div class="step"><h3>اقدام بعدی</h3><p id="case-next"></p></div>
+          <details id="report-evidence">
+            <summary id="report-evidence-label"></summary>
+            <ol class="report-lines" id="report-lines"></ol>
+          </details>
+        </div>
+        <button class="control" type="button" id="export-report">دانلود گزارش HTML</button>
+        <p class="meta">گزارش شامل نشانی مبدأ و خلاصهٔ شواهد است. متن خام لاگ در فایل گزارش درج نمی‌شود.</p>
+      </section>
+
+      <div id="analysis-view" class="analysis" hidden>
+        <section class="timeline" aria-labelledby="timeline-title">
+          <div class="section-head"><h2 id="timeline-title">خط زمانی</h2><span class="meta">زمان‌ها به UTC</span></div>
+          <div class="events" id="events"></div>
+          <div class="paging" id="paging">
+            <button class="control" type="button" id="prev-page">صفحهٔ قبل</button>
+            <span class="meta" id="page-number"></span>
+            <button class="control" type="button" id="next-page">صفحهٔ بعد</button>
+          </div>
+        </section>
+        <section class="evidence" id="evidence" aria-labelledby="evidence-title" aria-live="polite">
+          <div class="section-head"><h2 id="evidence-title">شاهد رخداد</h2><span class="tag" id="severity"></span></div>
+          <h3 id="action"></h3>
+          <p class="reason" id="reason"></p>
+          <dl class="facts">
+            <div><dt>مبدأ و پروتکل</dt><dd><bdi class="mono" id="origin"></bdi></dd></div>
+            <div><dt>زمان UTC</dt><dd><time dir="ltr" id="observed-at"></time></dd></div>
+          </dl>
+          <details class="raw" id="raw"><summary id="line-number"></summary><pre dir="ltr"><code id="raw-line"></code></pre></details>
+          <div class="step"><h3>اقدام بعدی</h3><p id="next-step"></p></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    'use strict';
+
+    const byId = id => document.getElementById(id);
+    const number = new Intl.NumberFormat('fa-IR');
+    const maxBytes = 20 * 1024 * 1024;
+    const pageSize = 20;
+    const reportLimit = 12;
+    const severityLabels = { LOW: 'کم', MEDIUM: 'متوسط', HIGH: 'زیاد', CRITICAL: 'بحرانی' };
+    const severityRank = { LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+    const eventsLabels = new Map([
+      ['connect', 'اتصال به طعمه'],
+      ['discover', 'شناسایی سرویس طعمه'],
+      ['read', 'خواندن دادهٔ طعمه'],
+      ['sysinfo', 'خواندن مشخصات طعمه'],
+      ['invalid-frame', 'فریم نامعتبر'],
+      ['write', 'درخواست ثبت مقدار در طعمه'],
+      ['modify-param', 'درخواست تغییر تنظیم طعمه'],
+      ['manipulate', 'تعامل ثبت‌شده با فرمان کنترلی طعمه'],
+      ['critical-write-attempt', 'تلاش برای تغییر نقطهٔ حساس طعمه'],
+      ['login-attempt', 'تلاش برای ورود به طعمه'],
+      ['token-trip', 'فعال شدن نشانهٔ طعمه']
+    ]);
+    const demo = [
+      '{"time":"2026-11-19T10:42:03+00:00","protocol":"modbus","src_ip":"192.0.2.18","action":"connect","detail":"Synthetic lab connection","severity":"LOW","technique":null,"session_score":1,"session_stage":"RECON"}',
+      '{"time":"2026-11-19T10:42:07+00:00","protocol":"modbus","src_ip":"192.0.2.18","action":"read","detail":"Synthetic read event","severity":"LOW","technique":null,"session_score":3,"session_stage":"RECON"}',
+      '{"time":"2026-11-19T10:42:16+00:00","protocol":"modbus","src_ip":"192.0.2.18","action":"critical-write-attempt","detail":"Synthetic event on a monitored decoy point","severity":"CRITICAL","technique":null,"session_score":23,"session_stage":"MANIPULATION"}',
+      '{"time":"2026-11-19T10:44:01+00:00","protocol":"web-hmi","src_ip":"192.0.2.26","action":"connect","detail":"Synthetic availability check","severity":"LOW","technique":null,"session_score":1,"session_stage":"RECON"}'
+    ].join('\n');
+
+    let entries = [];
+    let scoped = [];
+    let selected = null;
+    let page = 0;
+    let importTicket = 0;
+    let isDemo = true;
+
+    function parseLog(text) {
+      const parsed = [];
+      let invalid = 0;
+      // Offsets keep sorting deterministic across browsers and analyst time zones.
+      const timestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+      for (const [index, line] of text.replace(/^\uFEFF/, '').split(/\r?\n/).entries()) {
+        if (!line.trim()) continue;
+        let event;
+        try {
+          event = JSON.parse(line);
+        } catch {
+          invalid += 1;
+          continue;
+        }
+        const fields = ['time', 'protocol', 'src_ip', 'action'];
+        if (!event || typeof event !== 'object' ||
+            fields.some(field => typeof event[field] !== 'string' || !event[field].trim() || event[field].length > 128) ||
+            !timestampPattern.test(event.time) || !Number.isFinite(Date.parse(event.time))) {
+          invalid += 1;
+          continue;
+        }
+        const severity = typeof event.severity === 'string' ? event.severity.toUpperCase() : '';
+        parsed.push({
+          action: event.action,
+          protocol: event.protocol,
+          source: event.src_ip,
+          time: new Date(event.time).toISOString(),
+          severity: Object.hasOwn(severityRank, severity) ? severity : '',
+          line: index + 1,
+          raw: line
+        });
+      }
+      parsed.sort((a, b) => a.time.localeCompare(b.time) || a.line - b.line);
+      return { entries: parsed, invalid };
+    }
+
+    function setText(id, text) {
+      byId(id).textContent = text;
+    }
+
+    function showNotice(message = '') {
+      setText('notice', message);
+      byId('notice').hidden = !message;
+    }
+
+    function isAttention(entry) {
+      return severityRank[entry.severity] >= severityRank.HIGH;
+    }
+
+    function title(entry) {
+      return eventsLabels.get(entry.action) ?? ('رخداد ثبت‌شده · ' + entry.action);
+    }
+
+    function nextStep(entry) {
+      if (isAttention(entry)) return 'زمان و مبدأ رخداد را با برنامهٔ تست مجاز و لاگ‌های شبکه تطبیق بده.';
+      return 'رخدادهای نزدیک از همین مبدأ را در خط زمانی مرور کن.';
+    }
+
+    function renderEvidence() {
+      const entry = selected;
+      const severity = severityLabels[entry.severity] ?? 'نامشخص';
+      setText('severity', 'شدت ثبت‌شده: ' + severity);
+      byId('severity').classList.toggle('attention', isAttention(entry));
+      setText('action', title(entry));
+      setText('reason', isAttention(entry)
+        ? 'حسگر شدت زیاد یا بحرانی را ثبت کرده است. تأیید رخداد به هم‌سنجی با شواهد شبکه نیاز دارد.'
+        : 'این برچسب و شدت از رکورد ثبت‌شدهٔ حسگر خوانده شده‌اند.');
+      setText('origin', entry.source + ' · ' + entry.protocol);
+      setText('observed-at', entry.time);
+      byId('observed-at').dateTime = entry.time;
+      setText('line-number', 'متن خام لاگ · خط ' + number.format(entry.line));
+      setText('raw-line', entry.raw);
+      setText('next-step', nextStep(entry));
+      byId('raw').open = false;
+    }
+
+    function renderEvents() {
+      const eventList = byId('events');
+      const visible = scoped.slice(page * pageSize, (page + 1) * pageSize);
+      for (const entry of visible) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'event';
+        button.classList.toggle('attention', isAttention(entry));
+        button.setAttribute('aria-pressed', String(entry === selected));
+        const dot = document.createElement('span');
+        dot.className = 'event-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        const copy = document.createElement('span');
+        copy.className = 'event-copy';
+        const caption = document.createElement('span');
+        caption.textContent = title(entry);
+        const origin = document.createElement('bdi');
+        origin.className = 'meta mono';
+        origin.textContent = entry.source + ' · ' + entry.protocol;
+        copy.append(caption, origin);
+        const clock = document.createElement('span');
+        clock.className = 'event-clock';
+        const time = document.createElement('time');
+        time.dateTime = entry.time;
+        time.textContent = entry.time.slice(11, 19);
+        const line = document.createElement('span');
+        line.className = 'meta';
+        line.textContent = 'خط ' + number.format(entry.line);
+        clock.append(time, line);
+        button.append(dot, copy, clock);
+        button.addEventListener('click', () => {
+          selected = entry;
+          eventList.querySelector('[aria-pressed="true"]')?.setAttribute('aria-pressed', 'false');
+          button.setAttribute('aria-pressed', 'true');
+          renderEvidence();
+        });
+        eventList.append(button);
+      }
+      const pages = Math.ceil(scoped.length / pageSize);
+      byId('paging').hidden = pages <= 1;
+      byId('prev-page').disabled = page === 0;
+      byId('next-page').disabled = page >= pages - 1;
+      setText('page-number', number.format(page + 1) + ' از ' + number.format(pages));
+    }
+
+    function byImportance(a, b) {
+      return (severityRank[b.severity] ?? 0) - (severityRank[a.severity] ?? 0);
+    }
+
+    function renderReport() {
+      const ranked = [...scoped].sort(byImportance);
+      const top = ranked[0];
+      const flags = scoped.filter(isAttention).length;
+      const first = scoped[0];
+      const last = scoped.at(-1);
+      const source = byId('source').value;
+      setText('case-title', flags ? title(top) : 'خلاصهٔ رخدادهای ثبت‌شده');
+      setText('case-status', flags ? 'نیاز به پیگیری' : 'مرور رخدادها');
+      byId('case-status').classList.toggle('attention', flags > 0);
+      setText('case-summary', number.format(scoped.length) + ' رخداد در این نما ثبت شده است. '
+        + number.format(flags) + ' رخداد با شدت زیاد یا بحرانی ثبت شده است.');
+      setText('case-range', 'مبدأ: ' + (source || 'همهٔ مبدأها') + ' | UTC: ' + first.time + ' — ' + last.time);
+      setText('case-next', nextStep(top));
+      const included = ranked.slice(0, reportLimit).sort((a, b) => a.time.localeCompare(b.time) || a.line - b.line);
+      setText('report-evidence-label', 'شواهد منتخب · ' + number.format(included.length) + ' از ' + number.format(scoped.length) + ' رخداد');
+      const list = byId('report-lines');
+      list.replaceChildren();
+      for (const entry of included) {
+        const item = document.createElement('li');
+        const event = document.createElement('span');
+        event.textContent = title(entry) + ' · خط ' + number.format(entry.line);
+        const metadata = document.createElement('bdi');
+        metadata.className = 'meta';
+        metadata.textContent = entry.time + ' · ' + entry.source + ' · ' + entry.protocol;
+        item.append(event, metadata);
+        list.append(item);
+      }
+    }
+
+    function showPage(index, initial = null) {
+      page = index;
+      selected = initial ?? scoped[page * pageSize];
+      byId('events').replaceChildren();
+      renderEvents();
+      renderEvidence();
+    }
+
+    function setScope() {
+      const source = byId('source').value;
+      scoped = source ? entries.filter(entry => entry.source === source) : entries;
+      const important = scoped.reduce((best, entry) => byImportance(entry, best) < 0 ? entry : best);
+      setText('event-count', number.format(scoped.length) + ' رخداد');
+      showPage(Math.floor(scoped.indexOf(important) / pageSize), important);
+      renderReport();
+    }
+
+    function loadLog(text, name, demoFile = false) {
+      const result = parseLog(text);
+      if (!result.entries.length) {
+        showNotice('هیچ رخداد معتبر MirageOT در «' + name + '» پیدا نشد.');
+        return;
+      }
+      entries = result.entries;
+      isDemo = demoFile;
+      setText('file-name', name);
+      byId('demo-label').hidden = !isDemo;
+      const sources = [...new Set(entries.map(entry => entry.source))].sort();
+      const select = byId('source');
+      select.replaceChildren(new Option('همهٔ مبدأها', ''));
+      for (const source of sources) select.add(new Option(source, source));
+      setScope();
+      showNotice(result.invalid ? number.format(result.invalid) + ' خط نامعتبر یا ناقص از «' + name + '» کنار گذاشته شد.' : '');
+    }
+
+    function downloadReport() {
+      const doc = document.implementation.createHTMLDocument('MirageOT Replay | گزارش رخداد');
+      doc.documentElement.lang = 'fa';
+      doc.documentElement.dir = 'rtl';
+      const charset = doc.createElement('meta');
+      charset.setAttribute('charset', 'utf-8');
+      doc.head.prepend(charset);
+      const policy = doc.createElement('meta');
+      policy.httpEquiv = 'Content-Security-Policy';
+      policy.content = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'";
+      doc.head.append(policy);
+      const viewport = doc.createElement('meta');
+      viewport.name = 'viewport';
+      viewport.content = 'width=device-width, initial-scale=1';
+      doc.head.append(viewport);
+      const style = doc.createElement('style');
+      style.textContent = 'body{font:16px/1.8 Tahoma,sans-serif;max-width:780px;margin:3rem auto;padding:0 1rem;color:#172a34;background:#fff;overflow-wrap:anywhere} h1,h2,h3,p{margin:0 0 .65rem} .step{padding:.8rem;background:#eef5f4} .meta{color:#4a5d67;font-size:.9rem} li{padding:.3rem 0} .report-head .tag{font-weight:bold}';
+      doc.head.append(style);
+      const heading = doc.createElement('h1');
+      heading.textContent = 'گزارش رخداد MirageOT';
+      const file = doc.createElement('p');
+      file.className = 'meta';
+      file.textContent = (isDemo ? 'دادهٔ آزمایشی · ' : 'فایل ورودی · ') + byId('file-name').textContent;
+      const report = doc.importNode(byId('report-content'), true);
+      report.querySelector('details').open = true;
+      doc.body.append(heading, file, report);
+      const url = URL.createObjectURL(new Blob(['<!doctype html>\n', doc.documentElement.outerHTML], { type: 'text/html;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'mirageot-report.html';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    byId('open-file').addEventListener('change', async event => {
+      const [file] = event.target.files;
+      event.target.value = '';
+      if (!file) return;
+      const ticket = ++importTicket;
+      if (file.size > maxBytes) {
+        showNotice('حجم «' + file.name + '» از سقف ۲۰ مگابایت بیشتر است.');
+        return;
+      }
+      showNotice('در حال خواندن «' + file.name + '»…');
+      try {
+        const text = await file.text();
+        if (ticket === importTicket) loadLog(text, file.name);
+      } catch {
+        if (ticket === importTicket) showNotice('خواندن «' + file.name + '» ممکن نشد.');
+      }
+    });
+    byId('open-demo').addEventListener('click', () => {
+      ++importTicket;
+      loadLog(demo, 'ot-lab.jsonl', true);
+    });
+    byId('source').addEventListener('change', setScope);
+    byId('prev-page').addEventListener('click', () => showPage(page - 1));
+    byId('next-page').addEventListener('click', () => showPage(page + 1));
+    byId('export-report').addEventListener('click', downloadReport);
+    const views = document.querySelectorAll('[data-view]');
+    for (const button of views) {
+      button.addEventListener('click', () => {
+        for (const view of views) {
+          const active = view === button;
+          view.setAttribute('aria-pressed', String(active));
+          byId(view.dataset.view).hidden = !active;
+        }
+      });
+    }
+    loadLog(demo, 'ot-lab.jsonl', true);
+  </script>
+</body>
+</html>
