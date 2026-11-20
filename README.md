@@ -69,9 +69,13 @@ The generated files are example lures. Visiting the `/token/` URL records a `tok
 
 ## Review saved events offline
 
-Open [`replay/index.html`](replay/index.html) in a modern browser from a local clone, or download the file from GitHub and open it directly. MirageOT Replay starts with a synthetic case. To inspect your own events, choose **باز کردن فایل JSONL** and open the MirageOT `events.jsonl` file. The viewer accepts files up to 20 MiB and reports skipped invalid lines.
+Open [`replay/index.html`](replay/index.html) in a modern browser. The offline viewer starts with synthetic events from MirageOT and [Advanced Honeypot](https://github.com/Am1rX/Advanced_Honeypot). Use **افزودن فایل JSONL** to add `events.jsonl` or `honeypot_events.jsonl`, together or one at a time. The first valid import replaces the demo. Replay can hold up to 40 MiB per case and 20 MiB per file. It reports invalid lines without discarding valid events.
 
-Use **میز تحلیل** to filter by source and inspect the UTC timeline and the original log line. **گزارش رخداد** summarizes the active source filter, shows up to 12 entries prioritized by recorded severity, and downloads a standalone HTML report. The export includes source addresses and selected event metadata. Raw log lines and the free-form `detail` field stay in the local viewer. The page works offline with no server, external assets, or upload.
+Filter the timeline by honeypot or source IP. Events include the source file and original line. MirageOT uses UTC timestamps. Advanced Honeypot may record local time without an offset. Enter the offset of the Advanced Honeypot host for the period being reviewed to align those events. Review files from different time offsets in separate cases.
+
+**میز تحلیل** opens the timeline and raw evidence. **گزارش رخداد** downloads a standalone incident report with up to 12 severity-prioritized entries. **اتصال و امن‌سازی** contains Wazuh Agent and Manager examples, guidance for historical import and live collection, and hardening steps for both dashboards. The tab also downloads filtered JSONL and CEF with allowlisted metadata. Raw payloads and free-form credential fields are not included in the SIEM export. Source addresses are included when valid.
+
+The browser does not transmit or store log files. Live Wazuh collection runs through the Agent after configuration. Native sensor files can include sensitive data, so scope collection and access to your environment.
 
 ## Protocol coverage
 

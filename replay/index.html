@@ -52,6 +52,7 @@
     .control:hover:not(:disabled), select:hover { border-color: var(--muted); }
     .open-file { position: relative; display: inline-flex; align-items: center; padding: 7px 13px; border-radius: 8px; background: var(--mint); color: #0a2a26; font-weight: bold; }
     .open-file:hover { background: #adf5e4; }
+    .open-file:has(input:disabled) { opacity: .65; cursor: wait; }
     .open-file input { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
     .workspace { margin-block-start: 25px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
     .filebar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 17px; }
@@ -61,9 +62,12 @@
     .tag.attention { background: var(--amber-bg); color: var(--amber); }
     .source-control { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--muted); }
     .source-control select { min-height: 39px; max-width: min(230px, 65vw); color: var(--text); }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+    .clock-notice { margin: 0 17px 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+    .clock-notice input { width: 110px; min-height: 38px; color: var(--text); }
     .notification { margin: 0 17px 12px; padding: 8px 11px; background: var(--amber-bg); border-radius: 7px; color: var(--amber); overflow-wrap: anywhere; }
     .viewbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; padding-inline: 17px; border-block: 1px solid var(--line); }
-    .views { display: flex; gap: 8px; }
+    .views { display: flex; flex-wrap: wrap; gap: 3px 8px; }
     .views button { padding: 8px 9px; background: none; border: 0; color: var(--muted); border-block-end: 2px solid transparent; }
     .views button[aria-pressed="true"] { border-color: var(--mint); color: var(--mint); font-weight: bold; }
     .meta { font-size: .78rem; color: var(--muted); }
@@ -106,6 +110,15 @@
     .report-lines li { padding: 4px 0; overflow-wrap: anywhere; }
     .report-lines .meta { margin-inline-start: 5px; }
     #export-report { margin-block-start: 8px; }
+    .guide { display: grid; gap: 18px; }
+    .guide section + section { border-block-start: 1px solid var(--line); padding-block-start: 14px; }
+    .guide h2 { font-size: 1.2rem; }
+    .guide h3 { font-size: .95rem; margin-block-start: 10px; }
+    .guide p, .guide li { overflow-wrap: anywhere; }
+    .guide ol, .guide ul { margin-block: 8px; padding-inline-start: 22px; }
+    .guide li + li { margin-block-start: 6px; }
+    .guide pre { overflow-wrap: anywhere; white-space: pre-wrap; margin: 8px 0; padding: 10px; background: #0c1720; border: 1px solid var(--line); border-radius: 6px; }
+    .guide a { color: var(--mint); }
     @media (max-width: 680px) {
       .shell { width: calc(100% - 1.5rem); }
       main { padding-block: 23px; }
@@ -126,9 +139,9 @@
 
   <main class="shell">
     <div class="intro">
-      <div><h1>بررسی رخداد صنعتی</h1><p>خط زمانی، شواهد و گزارش رخدادهای ثبت‌شده در MirageOT</p></div>
+      <div><h1>بررسی لاگ هانی‌پات‌ها</h1><p dir="ltr" style="text-align: right">MirageOT · Advanced Honeypot</p></div>
       <div class="actions">
-        <label class="open-file">باز کردن فایل JSONL<input id="open-file" type="file" accept=".jsonl,.ndjson,.log,.txt,application/x-ndjson" aria-label="باز کردن فایل JSONL"></label>
+        <label class="open-file">افزودن فایل JSONL<input id="open-file" type="file" multiple accept=".jsonl,.ndjson,.log,.txt,application/x-ndjson" aria-label="افزودن فایل JSONL"></label>
         <button class="control" type="button" id="open-demo">باز کردن نمونه</button>
       </div>
     </div>
@@ -136,13 +149,25 @@
     <section class="workspace" aria-label="پروندهٔ رخداد">
       <div class="filebar">
         <div class="filename"><bdi class="mono" id="file-name"></bdi><span class="tag" id="demo-label">دادهٔ آزمایشی</span></div>
-        <label class="source-control" for="source">مبدأ <select id="source"></select></label>
+        <div class="filters">
+          <label class="source-control" for="sensor">هانی‌پات <select id="sensor">
+            <option value="">هر دو</option><option value="mirageot">MirageOT</option><option value="advanced_honeypot">Advanced Honeypot</option>
+          </select></label>
+          <label class="source-control" for="source">مبدأ <select id="source"></select></label>
+        </div>
       </div>
       <p id="notice" class="notification" role="status" hidden></p>
+      <div id="clock-notice" class="clock-notice" hidden>
+        <label for="offset">اختلاف ساعت میزبان Advanced با UTC</label>
+        <input class="control mono" id="offset" dir="ltr" placeholder="+03:30" autocomplete="off" aria-describedby="clock-status">
+        <button class="control" id="apply-offset" type="button">اعمال اختلاف ساعت</button>
+        <p class="meta" id="clock-status" role="status"></p>
+      </div>
       <div class="viewbar">
         <div class="views" aria-label="نمای پرونده">
           <button type="button" aria-pressed="true" aria-controls="report-view" data-view="report-view">گزارش رخداد</button>
           <button type="button" aria-pressed="false" aria-controls="analysis-view" data-view="analysis-view">میز تحلیل</button>
+          <button type="button" aria-pressed="false" aria-controls="guide-view" data-view="guide-view">اتصال و امن‌سازی</button>
         </div>
         <p class="meta" id="event-count" role="status"></p>
       </div>
@@ -164,7 +189,7 @@
 
       <div id="analysis-view" class="analysis" hidden>
         <section class="timeline" aria-labelledby="timeline-title">
-          <div class="section-head"><h2 id="timeline-title">خط زمانی</h2><span class="meta">زمان‌ها به UTC</span></div>
+          <div class="section-head"><h2 id="timeline-title">خط زمانی</h2><span class="meta" id="timeline-clock"></span></div>
           <div class="events" id="events"></div>
           <div class="paging" id="paging">
             <button class="control" type="button" id="prev-page">صفحهٔ قبل</button>
@@ -177,11 +202,81 @@
           <h3 id="action"></h3>
           <p class="reason" id="reason"></p>
           <dl class="facts">
-            <div><dt>مبدأ و پروتکل</dt><dd><bdi class="mono" id="origin"></bdi></dd></div>
-            <div><dt>زمان UTC</dt><dd><time dir="ltr" id="observed-at"></time></dd></div>
+            <div><dt>هانی‌پات و مبدأ</dt><dd><bdi class="mono" id="origin"></bdi></dd></div>
+            <div><dt id="evidence-clock">زمان UTC</dt><dd><time dir="ltr" id="observed-at"></time></dd></div>
+            <div><dt>فایل لاگ</dt><dd><bdi id="evidence-file"></bdi></dd></div>
           </dl>
           <details class="raw" id="raw"><summary id="line-number"></summary><pre dir="ltr"><code id="raw-line"></code></pre></details>
           <div class="step"><h3>اقدام بعدی</h3><p id="next-step"></p></div>
+        </section>
+      </div>
+
+      <div id="guide-view" class="report guide" hidden aria-label="راهنمای اتصال و امن‌سازی">
+        <section>
+          <h2>خروجی برای SIEM</h2>
+          <p>خروجی، همهٔ رخدادهای منطبق با فیلتر فعلی را شامل می‌شود. متن خام، رمزها و داده‌های آزاد رخداد در آن درج نمی‌شوند. نشانی مبدأ حفظ می‌شود.</p>
+          <div class="actions">
+            <button class="control" id="export-jsonl" type="button">دانلود JSONL استاندارد</button>
+            <button class="control" id="export-cef" type="button">دانلود CEF</button>
+          </div>
+          <p class="meta" id="export-status" role="status"></p>
+          <p class="meta">اگر لاگ‌های Advanced اختلاف ساعت‌های متفاوت دارند، هر بازه یا میزبان را در یک پروندهٔ جدا باز کن.</p>
+        </section>
+        <section>
+          <h2>اتصال به Wazuh</h2>
+          <ol>
+            <li>برای وارد کردن پرونده، نسخهٔ JSONL استاندارد را روی میزبانی که Agent دارد قرار بده. مسیر واقعی فایل را در نمونهٔ زیر جایگزین کن و بلوک را داخل <bdi>ossec_config</bdi> در <bdi>ossec.conf</bdi> همان Agent بگذار.</li>
+            <li>برای جمع‌آوری زنده، به‌جای بلوک پرونده، بلوک مربوط به هر حسگر را روی Agent همان میزبان تنظیم کن. برای Advanced مسیر واقعی <bdi>json_log_file</bdi> را پیدا کن. لاگ‌های زندهٔ خام ممکن است رمز آزمایشی یا ورودی حساس داشته باشند. دسترسی، مدت نگهداری و مقصد را طبق سیاست تیم محدود کن.</li>
+            <li>قوانین نمونه را در <bdi>local_rules.xml</bdi> روی Manager ادغام کن و قبل از راه‌اندازی مجدد مطمئن شو شناسه‌ها با قوانین موجود تداخل ندارند. یک خط از خروجی استاندارد را با <bdi>wazuh-logtest</bdi> بررسی کن. سپس Agent و Manager مربوط را راه‌اندازی مجدد کن و در داشبورد با <bdi>data.hp_product</bdi> فیلتر بزن.</li>
+          </ol>
+          <details><summary>تنظیم Agent برای پروندهٔ خروجی</summary><pre dir="ltr"><code id="wazuh-import">&lt;localfile&gt;
+  &lt;location&gt;/var/log/honeypots/replay-siem.jsonl&lt;/location&gt;
+  &lt;log_format&gt;json&lt;/log_format&gt;
+  &lt;only-future-events&gt;no&lt;/only-future-events&gt;
+&lt;/localfile&gt;</code></pre><p class="meta">این گزینه برای ورود محتوای موجود است. برای آزمایش از یک مسیر اختصاصی استفاده کن تا یک پرونده را چند بار وارد نکنی.</p></details>
+          <details><summary>تنظیم Agent برای حسگرهای زنده</summary><pre dir="ltr"><code id="wazuh-live">&lt;localfile&gt;
+  &lt;location&gt;/var/log/mirageot/events.jsonl&lt;/location&gt;
+  &lt;log_format&gt;json&lt;/log_format&gt;
+  &lt;label key="hp_product"&gt;mirageot&lt;/label&gt;
+&lt;/localfile&gt;
+
+&lt;localfile&gt;
+  &lt;location&gt;/opt/advanced-honeypot/honeypot_events.jsonl&lt;/location&gt;
+  &lt;log_format&gt;json&lt;/log_format&gt;
+  &lt;label key="hp_product"&gt;advanced_honeypot&lt;/label&gt;
+&lt;/localfile&gt;</code></pre></details>
+          <details><summary>قوانین نمونهٔ Manager</summary><pre dir="ltr"><code id="wazuh-rules">&lt;group name="honeypots,"&gt;
+  &lt;rule id="100560" level="3"&gt;
+    &lt;decoded_as&gt;json&lt;/decoded_as&gt;
+    &lt;field name="hp_product" type="pcre2"&gt;^(mirageot|advanced_honeypot)$&lt;/field&gt;
+    &lt;description&gt;Honeypot event from $(hp_product)&lt;/description&gt;
+    &lt;options&gt;no_full_log&lt;/options&gt;
+  &lt;/rule&gt;
+  &lt;rule id="100561" level="8"&gt;
+    &lt;if_sid&gt;100560&lt;/if_sid&gt;
+    &lt;field name="severity" type="pcre2"&gt;^(HIGH|CRITICAL)$&lt;/field&gt;
+    &lt;description&gt;High-severity honeypot event from $(hp_product)&lt;/description&gt;
+    &lt;options&gt;no_full_log&lt;/options&gt;
+  &lt;/rule&gt;
+  &lt;rule id="100562" level="8"&gt;
+    &lt;if_sid&gt;100560&lt;/if_sid&gt;
+    &lt;field name="alert_level" type="pcre2"&gt;^(HIGH|CRITICAL)$&lt;/field&gt;
+    &lt;description&gt;Advanced Honeypot high session alert level&lt;/description&gt;
+    &lt;options&gt;no_full_log&lt;/options&gt;
+  &lt;/rule&gt;
+&lt;/group&gt;</code></pre><p class="meta">حذف <bdi>full_log</bdi> فقط روی همان فیلدِ هشدار اثر دارد. برای اشتراک‌گذاری محدود، JSONL استاندارد را استفاده کن.</p></details>
+          <p class="meta"><a href="https://documentation.wazuh.com/current/user-manual/reference/ossec-conf/localfile.html" target="_blank" rel="noopener noreferrer">مستندات جمع‌آوری</a> · <a href="https://documentation.wazuh.com/current/user-manual/ruleset/rules/custom.html" target="_blank" rel="noopener noreferrer">مستندات قوانین</a></p>
+        </section>
+        <section>
+          <h2>امن‌سازی پنل‌ها</h2>
+          <ul>
+            <li><strong>MirageOT.</strong> <bdi>console_host</bdi> را روی <bdi>127.0.0.1</bdi> نگه دار. برای دسترسی مدیریتی از SSH یا شبکهٔ مدیریت استفاده کن. اگر کنسول باید روی شبکه گوش بدهد، API را با <bdi>MIRAGEOT_CONSOLE_TOKEN</bdi> و ورودی را با HTTPS و احراز هویت محافظت کن.</li>
+            <li><strong>Advanced Honeypot.</strong> داشبورد را روی <bdi>127.0.0.1</bdi> نگه دار و از تونل SSH استفاده کن. این پنل دادهٔ حساس و امکان حذف نشست دارد. اگر از توکن داخلی استفاده می‌کنی، آن را در <bdi>HONEYPOT_DASH_TOKEN</bdi> بگذار. مسیرهایی که توکن را در نشانی می‌گذارند می‌توانند آن را در تاریخچه و لاگ دسترسی ثبت کنند.</li>
+            <li><strong>هر دو حسگر.</strong> شبکهٔ طعمه را از شبکهٔ مدیریت و تجهیزات واقعی جدا کن. دسترسی به لاگ و دیتابیس را محدود کن و گزارش خام را روی مسیر عمومی یا GitHub قرار نده. برای اشتراک‌گذاری از خروجی محدودشده استفاده کن.</li>
+          </ul>
+          <pre dir="ltr"><code>ssh -N -L 127.0.0.1:18888:127.0.0.1:8888 admin@mirageot-host
+ssh -N -L 127.0.0.1:18080:127.0.0.1:8080 admin@advanced-host</code></pre>
+          <p class="meta">بعد از تونل، پنل‌ها را به‌ترتیب روی <bdi>127.0.0.1:18888</bdi> و <bdi>127.0.0.1:18080</bdi> باز کن. نام میزبان و پورت را با تنظیم واقعی جایگزین کن.</p>
         </section>
       </div>
     </section>
@@ -193,10 +288,14 @@
     const byId = id => document.getElementById(id);
     const number = new Intl.NumberFormat('fa-IR');
     const maxBytes = 20 * 1024 * 1024;
+    const maxTotalBytes = 40 * 1024 * 1024;
     const pageSize = 20;
     const reportLimit = 12;
     const severityLabels = { LOW: 'کم', MEDIUM: 'متوسط', HIGH: 'زیاد', CRITICAL: 'بحرانی' };
     const severityRank = { LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+    const sensorNames = { mirageot: 'MirageOT', advanced_honeypot: 'Advanced Honeypot' };
+    const zoneTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+    const wallTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/;
     const eventsLabels = new Map([
       ['connect', 'اتصال به طعمه'],
       ['discover', 'شناسایی سرویس طعمه'],
@@ -214,7 +313,8 @@
       '{"time":"2026-11-19T10:42:03+00:00","protocol":"modbus","src_ip":"192.0.2.18","action":"connect","detail":"Synthetic lab connection","severity":"LOW","technique":null,"session_score":1,"session_stage":"RECON"}',
       '{"time":"2026-11-19T10:42:07+00:00","protocol":"modbus","src_ip":"192.0.2.18","action":"read","detail":"Synthetic read event","severity":"LOW","technique":null,"session_score":3,"session_stage":"RECON"}',
       '{"time":"2026-11-19T10:42:16+00:00","protocol":"modbus","src_ip":"192.0.2.18","action":"critical-write-attempt","detail":"Synthetic event on a monitored decoy point","severity":"CRITICAL","technique":null,"session_score":23,"session_stage":"MANIPULATION"}',
-      '{"time":"2026-11-19T10:44:01+00:00","protocol":"web-hmi","src_ip":"192.0.2.26","action":"connect","detail":"Synthetic availability check","severity":"LOW","technique":null,"session_score":1,"session_stage":"RECON"}'
+      '{"time":"2026-11-19T10:44:01+00:00","protocol":"web-hmi","src_ip":"192.0.2.26","action":"connect","detail":"Synthetic availability check","severity":"LOW","technique":null,"session_score":1,"session_stage":"RECON"}',
+      '{"ts":"2026-11-19T10:44:04+00:00","event":"SSH_CRED_ATTEMPT","ip":"192.0.2.26","port":22,"alert_level":"MEDIUM","password":"synthetic-example","mitre_attack":"T1110"}'
     ].join('\n');
 
     let entries = [];
@@ -223,12 +323,16 @@
     let page = 0;
     let importTicket = 0;
     let isDemo = true;
+    let inputFiles = [];
+    let offset = '';
 
-    function parseLog(text) {
+    function field(value) {
+      return typeof value === 'string' && value.trim() && value.length <= 128;
+    }
+
+    function parseLog(text, file) {
       const parsed = [];
       let invalid = 0;
-      // Offsets keep sorting deterministic across browsers and analyst time zones.
-      const timestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
       for (const [index, line] of text.replace(/^\uFEFF/, '').split(/\r?\n/).entries()) {
         if (!line.trim()) continue;
         let event;
@@ -238,26 +342,54 @@
           invalid += 1;
           continue;
         }
-        const fields = ['time', 'protocol', 'src_ip', 'action'];
-        if (!event || typeof event !== 'object' ||
-            fields.some(field => typeof event[field] !== 'string' || !event[field].trim() || event[field].length > 128) ||
-            !timestampPattern.test(event.time) || !Number.isFinite(Date.parse(event.time))) {
+        if (!event || typeof event !== 'object') {
           invalid += 1;
           continue;
         }
-        const severity = typeof event.severity === 'string' ? event.severity.toUpperCase() : '';
+        const advanced = field(event.ts) && field(event.event) && field(event.ip);
+        const mirage = field(event.time) && field(event.protocol) && field(event.src_ip) && field(event.action);
+        const stamp = mirage ? event.time : event.ts;
+        const local = !mirage && advanced && wallTime.test(stamp);
+        if ((!mirage && !advanced) || (!local && !zoneTime.test(stamp)) ||
+            !Number.isFinite(Date.parse(local ? stamp + 'Z' : stamp))) {
+          invalid += 1;
+          continue;
+        }
+        const level = mirage ? event.severity : event.alert_level;
+        const severity = field(level) ? level.toUpperCase() : '';
         parsed.push({
-          action: event.action,
-          protocol: event.protocol,
-          source: event.src_ip,
-          time: new Date(event.time).toISOString(),
+          action: mirage ? event.action : event.event,
+          protocol: field(event.protocol) ? event.protocol : '',
+          source: mirage ? event.src_ip : event.ip,
+          sensor: mirage ? 'mirageot' : 'advanced_honeypot',
+          port: Number.isInteger(event.port) && event.port >= 1 && event.port <= 65535 ? event.port : null,
+          stamp,
+          local,
+          time: local ? stamp : new Date(stamp).toISOString(),
+          utc: !local,
           severity: Object.hasOwn(severityRank, severity) ? severity : '',
+          file,
           line: index + 1,
           raw: line
         });
       }
-      parsed.sort((a, b) => a.time.localeCompare(b.time) || a.line - b.line);
       return { entries: parsed, invalid };
+    }
+
+    function orderByTime(a, b) {
+      return Number(b.utc) - Number(a.utc) || a.time.localeCompare(b.time) || a.file.localeCompare(b.file) || a.line - b.line;
+    }
+
+    function refreshTimes() {
+      for (const entry of entries) {
+        if (!entry.local) continue;
+        entry.utc = Boolean(offset);
+        entry.time = offset ? new Date(entry.stamp + offset).toISOString() : entry.stamp;
+      }
+      entries.sort(orderByTime);
+      byId('clock-notice').hidden = !entries.some(entry => entry.local);
+      setText('clock-status', offset ? 'زمان‌های محلی با ' + offset + ' به UTC تبدیل شدند.'
+        : 'تا وقتی اختلاف ساعت مشخص نیست، زمان‌های محلی جدا از UTC نمایش داده می‌شوند.');
     }
 
     function setText(id, text) {
@@ -274,7 +406,7 @@
     }
 
     function title(entry) {
-      return eventsLabels.get(entry.action) ?? ('رخداد ثبت‌شده · ' + entry.action);
+      return eventsLabels.get(entry.action) ?? entry.action;
     }
 
     function nextStep(entry) {
@@ -285,16 +417,18 @@
     function renderEvidence() {
       const entry = selected;
       const severity = severityLabels[entry.severity] ?? 'نامشخص';
-      setText('severity', 'شدت ثبت‌شده: ' + severity);
+      setText('severity', (entry.sensor === 'mirageot' ? 'شدت رخداد: ' : 'سطح هشدار نشست: ') + severity);
       byId('severity').classList.toggle('attention', isAttention(entry));
       setText('action', title(entry));
-      setText('reason', isAttention(entry)
-        ? 'حسگر شدت زیاد یا بحرانی را ثبت کرده است. تأیید رخداد به هم‌سنجی با شواهد شبکه نیاز دارد.'
-        : 'این برچسب و شدت از رکورد ثبت‌شدهٔ حسگر خوانده شده‌اند.');
-      setText('origin', entry.source + ' · ' + entry.protocol);
+      setText('reason', entry.sensor === 'advanced_honeypot'
+        ? 'سطح نمایش‌داده‌شده از alert_level می‌آید و مربوط به نشست مبدأ است.'
+        : 'شدت از رخداد ثبت‌شدهٔ حسگر خوانده شده است. برای تأیید، شواهد شبکه را بررسی کن.');
+      setText('origin', [sensorNames[entry.sensor], entry.source, entry.protocol, entry.port].filter(Boolean).join(' · '));
       setText('observed-at', entry.time);
       byId('observed-at').dateTime = entry.time;
+      setText('evidence-clock', entry.utc ? 'زمان UTC' : 'زمان محلی حسگر');
       setText('line-number', 'متن خام لاگ · خط ' + number.format(entry.line));
+      setText('evidence-file', entry.file);
       setText('raw-line', entry.raw);
       setText('next-step', nextStep(entry));
       byId('raw').open = false;
@@ -318,13 +452,13 @@
         caption.textContent = title(entry);
         const origin = document.createElement('bdi');
         origin.className = 'meta mono';
-        origin.textContent = entry.source + ' · ' + entry.protocol;
+        origin.textContent = [entry.source, sensorNames[entry.sensor], entry.protocol, entry.port].filter(Boolean).join(' · ');
         copy.append(caption, origin);
         const clock = document.createElement('span');
         clock.className = 'event-clock';
         const time = document.createElement('time');
         time.dateTime = entry.time;
-        time.textContent = entry.time.slice(11, 19);
+        time.textContent = entry.time.slice(11, 19) + (entry.utc ? 'Z' : ' local');
         const line = document.createElement('span');
         line.className = 'meta';
         line.textContent = 'خط ' + number.format(entry.line);
@@ -353,17 +487,21 @@
       const ranked = [...scoped].sort(byImportance);
       const top = ranked[0];
       const flags = scoped.filter(isAttention).length;
-      const first = scoped[0];
-      const last = scoped.at(-1);
+      const utc = scoped.filter(entry => entry.utc);
       const source = byId('source').value;
       setText('case-title', flags ? title(top) : 'خلاصهٔ رخدادهای ثبت‌شده');
       setText('case-status', flags ? 'نیاز به پیگیری' : 'مرور رخدادها');
       byId('case-status').classList.toggle('attention', flags > 0);
       setText('case-summary', number.format(scoped.length) + ' رخداد در این نما ثبت شده است. '
-        + number.format(flags) + ' رخداد با شدت زیاد یا بحرانی ثبت شده است.');
-      setText('case-range', 'مبدأ: ' + (source || 'همهٔ مبدأها') + ' | UTC: ' + first.time + ' — ' + last.time);
+        + number.format(flags) + ' رکورد با شدت رخداد یا سطح نشستِ زیاد یا بحرانی ثبت شده است.');
+      const dateRange = utc.length ? ' | UTC: ' + utc[0].time + ' — ' + utc.at(-1).time : '';
+      const unknownCount = scoped.length - utc.length;
+      const unaligned = unknownCount ? ' | ' + number.format(unknownCount) + ' رخداد با ساعت محلی' : '';
+      const sensor = byId('sensor').value;
+      setText('case-range', (sensor ? sensorNames[sensor] : 'هر دو هانی‌پات')
+        + ' | مبدأ: ' + (source || 'همهٔ مبدأها') + dateRange + unaligned);
       setText('case-next', nextStep(top));
-      const included = ranked.slice(0, reportLimit).sort((a, b) => a.time.localeCompare(b.time) || a.line - b.line);
+      const included = ranked.slice(0, reportLimit).sort(orderByTime);
       setText('report-evidence-label', 'شواهد منتخب · ' + number.format(included.length) + ' از ' + number.format(scoped.length) + ' رخداد');
       const list = byId('report-lines');
       list.replaceChildren();
@@ -373,7 +511,7 @@
         event.textContent = title(entry) + ' · خط ' + number.format(entry.line);
         const metadata = document.createElement('bdi');
         metadata.className = 'meta';
-        metadata.textContent = entry.time + ' · ' + entry.source + ' · ' + entry.protocol;
+        metadata.textContent = [entry.time + (entry.utc ? '' : ' (local)'), sensorNames[entry.sensor], entry.source, entry.protocol].filter(Boolean).join(' · ');
         item.append(event, metadata);
         list.append(item);
       }
@@ -388,30 +526,63 @@
     }
 
     function setScope() {
+      const sensor = byId('sensor').value;
       const source = byId('source').value;
-      scoped = source ? entries.filter(entry => entry.source === source) : entries;
+      scoped = entries.filter(entry => (!sensor || entry.sensor === sensor) && (!source || entry.source === source));
+      setText('timeline-clock', scoped.every(entry => entry.utc) ? 'زمان‌ها به UTC' : 'UTC و زمان محلی، جداگانه');
+      setText('export-status', number.format(scoped.length) + ' رخداد آمادهٔ خروجی');
       const important = scoped.reduce((best, entry) => byImportance(entry, best) < 0 ? entry : best);
       setText('event-count', number.format(scoped.length) + ' رخداد');
       showPage(Math.floor(scoped.indexOf(important) / pageSize), important);
       renderReport();
     }
 
-    function loadLog(text, name, demoFile = false) {
-      const result = parseLog(text);
-      if (!result.entries.length) {
-        showNotice('هیچ رخداد معتبر MirageOT در «' + name + '» پیدا نشد.');
-        return;
-      }
-      entries = result.entries;
-      isDemo = demoFile;
+    function setSourceOptions() {
+      const sensor = byId('sensor').value;
+      const sourceSelect = byId('source');
+      const previous = sourceSelect.value;
+      const sources = [...new Set(entries.filter(entry => !sensor || entry.sensor === sensor).map(entry => entry.source))].sort();
+      sourceSelect.replaceChildren(new Option('همهٔ مبدأها', ''));
+      for (const source of sources) sourceSelect.add(new Option(source, source));
+      if (sources.includes(previous)) sourceSelect.value = previous;
+      setScope();
+    }
+
+    function refreshCase() {
+      const name = inputFiles.length === 1 ? inputFiles[0].name : number.format(inputFiles.length) + ' فایل لاگ';
       setText('file-name', name);
       byId('demo-label').hidden = !isDemo;
-      const sources = [...new Set(entries.map(entry => entry.source))].sort();
-      const select = byId('source');
-      select.replaceChildren(new Option('همهٔ مبدأها', ''));
-      for (const source of sources) select.add(new Option(source, source));
-      setScope();
-      showNotice(result.invalid ? number.format(result.invalid) + ' خط نامعتبر یا ناقص از «' + name + '» کنار گذاشته شد.' : '');
+      const sensorSelect = byId('sensor');
+      const available = new Set(entries.map(entry => entry.sensor));
+      for (const option of sensorSelect.options) option.disabled = Boolean(option.value) && !available.has(option.value);
+      if (sensorSelect.selectedOptions[0]?.disabled) sensorSelect.value = '';
+      refreshTimes();
+      setSourceOptions();
+    }
+
+    function showDemo() {
+      ++importTicket;
+      byId('open-file').disabled = false;
+      isDemo = true;
+      inputFiles = [{ name: 'honeypots-demo.jsonl', bytes: 0 }];
+      entries = parseLog(demo, inputFiles[0].name).entries;
+      byId('sensor').value = '';
+      byId('source').value = '';
+      offset = '';
+      byId('offset').value = '';
+      refreshCase();
+      showNotice();
+    }
+
+    function downloadFile(name, type, parts) {
+      const url = URL.createObjectURL(new Blob(parts, { type }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     function downloadReport() {
@@ -440,41 +611,125 @@
       const report = doc.importNode(byId('report-content'), true);
       report.querySelector('details').open = true;
       doc.body.append(heading, file, report);
-      const url = URL.createObjectURL(new Blob(['<!doctype html>\n', doc.documentElement.outerHTML], { type: 'text/html;charset=utf-8' }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'mirageot-report.html';
-      document.body.append(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      downloadFile('mirageot-report.html', 'text/html;charset=utf-8', ['<!doctype html>\n', doc.documentElement.outerHTML]);
+    }
+
+    function validAddress(ip) {
+      const ipv4 = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+      if (ipv4.test(ip)) return ip.split('.').every(part => Number(part) <= 255);
+      if (!ip.includes(':') || !/^[\da-fA-F:.]+$/.test(ip)) return false;
+      try {
+        return Boolean(new URL('http://[' + ip + ']/').hostname);
+      } catch {
+        return false;
+      }
+    }
+
+    function forSiem(entry) {
+      // Whitelist the envelope. Free-form fields in the original record never cross this boundary.
+      const token = /^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,95}$/;
+      return {
+        hp_product: entry.sensor,
+        ...(entry.utc ? { time: entry.time } : { sensor_time: entry.time }),
+        ...(validAddress(entry.source) ? { src_ip: entry.source } : {}),
+        ...(entry.port ? { dst_port: entry.port } : {}),
+        ...(token.test(entry.protocol) ? { protocol: entry.protocol } : {}),
+        action: token.test(entry.action) ? entry.action : 'unknown',
+        severity: entry.severity || 'UNKNOWN',
+        severity_scope: entry.sensor === 'mirageot' ? 'event' : 'session'
+      };
+    }
+
+    function asCef(event) {
+      const severity = { LOW: 2, MEDIUM: 5, HIGH: 8, CRITICAL: 10, UNKNOWN: 0 };
+      const extensions = ['cs1Label=SeverityScope', 'cs1=' + event.severity_scope];
+      if (event.src_ip) {
+        if (event.src_ip.includes(':')) {
+          extensions.push('c6a1Label=SourceIPv6', 'c6a1=' + event.src_ip);
+        } else {
+          extensions.push('src=' + event.src_ip);
+        }
+      }
+      if (event.time) extensions.push('rt=' + Date.parse(event.time));
+      if (event.sensor_time) extensions.push('cs2Label=SensorLocalTime', 'cs2=' + event.sensor_time);
+      if (event.dst_port) extensions.push('dpt=' + event.dst_port);
+      if (event.protocol) extensions.push('app=' + event.protocol);
+      return ['CEF:0', 'Am1rX', sensorNames[event.hp_product], '2', event.action, event.action, severity[event.severity], extensions.join(' ')].join('|');
+    }
+
+    function downloadSiem(format) {
+      const encode = format === 'cef' ? asCef : JSON.stringify;
+      const lines = scoped.map(entry => encode(forSiem(entry)) + '\n');
+      downloadFile('honeypots-siem.' + format, 'text/plain;charset=utf-8', lines);
+    }
+
+    async function importFiles(files, ticket) {
+      let remaining = isDemo ? maxTotalBytes : maxTotalBytes - inputFiles.reduce((sum, item) => sum + item.bytes, 0);
+      const messages = [];
+      const records = [];
+      const accepted = [];
+      for (const file of files) {
+        if (ticket !== importTicket) return;
+        if (file.size > maxBytes || file.size > remaining) {
+          messages.push('«' + file.name + '» از سقف ۲۰ مگابایت برای هر فایل یا ۴۰ مگابایت برای پرونده بیشتر است.');
+          continue;
+        }
+        try {
+          const parsed = parseLog(await file.text(), file.name);
+          if (!parsed.entries.length) {
+            messages.push('هیچ رخداد معتبر هانی‌پات در «' + file.name + '» پیدا نشد.');
+            continue;
+          }
+          for (const entry of parsed.entries) records.push(entry);
+          accepted.push({ name: file.name, bytes: file.size });
+          remaining -= file.size;
+          if (parsed.invalid) messages.push(number.format(parsed.invalid) + ' خط نامعتبر یا ناقص از «' + file.name + '» کنار گذاشته شد.');
+        } catch {
+          messages.push('خواندن «' + file.name + '» ممکن نشد.');
+        }
+      }
+      if (ticket !== importTicket) return;
+      if (accepted.length) {
+        entries = isDemo ? records : entries.concat(records);
+        inputFiles = isDemo ? accepted : inputFiles.concat(accepted);
+        isDemo = false;
+        refreshCase();
+      }
+      showNotice(messages.join(' '));
     }
 
     byId('open-file').addEventListener('change', async event => {
-      const [file] = event.target.files;
-      event.target.value = '';
-      if (!file) return;
+      const input = event.target;
+      const files = [...input.files];
+      input.value = '';
+      if (!files.length) return;
       const ticket = ++importTicket;
-      if (file.size > maxBytes) {
-        showNotice('حجم «' + file.name + '» از سقف ۲۰ مگابایت بیشتر است.');
+      input.disabled = true;
+      showNotice('در حال خواندن فایل‌های لاگ…');
+      try {
+        await importFiles(files, ticket);
+      } finally {
+        if (ticket === importTicket) input.disabled = false;
+      }
+    });
+    byId('open-demo').addEventListener('click', showDemo);
+    byId('apply-offset').addEventListener('click', () => {
+      const value = byId('offset').value.trim();
+      if (value && !/^[+-](?:(?:0[0-9]|1[0-3]):[0-5][0-9]|14:00)$/.test(value)) {
+        setText('clock-status', 'اختلاف ساعت را مانند +03:30 یا -04:00 وارد کن.');
         return;
       }
-      showNotice('در حال خواندن «' + file.name + '»…');
-      try {
-        const text = await file.text();
-        if (ticket === importTicket) loadLog(text, file.name);
-      } catch {
-        if (ticket === importTicket) showNotice('خواندن «' + file.name + '» ممکن نشد.');
-      }
+      offset = value;
+      refreshTimes();
+      setScope();
     });
-    byId('open-demo').addEventListener('click', () => {
-      ++importTicket;
-      loadLog(demo, 'ot-lab.jsonl', true);
-    });
+    byId('sensor').addEventListener('change', setSourceOptions);
     byId('source').addEventListener('change', setScope);
     byId('prev-page').addEventListener('click', () => showPage(page - 1));
     byId('next-page').addEventListener('click', () => showPage(page + 1));
     byId('export-report').addEventListener('click', downloadReport);
+    byId('export-jsonl').addEventListener('click', () => downloadSiem('jsonl'));
+    byId('export-cef').addEventListener('click', () => downloadSiem('cef'));
     const views = document.querySelectorAll('[data-view]');
     for (const button of views) {
       button.addEventListener('click', () => {
@@ -485,7 +740,7 @@
         }
       });
     }
-    loadLog(demo, 'ot-lab.jsonl', true);
+    showDemo();
   </script>
 </body>
 </html>
